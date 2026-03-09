@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fire & Smoke Detection — System Console</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Monochrome Professional Palette */
+    :root {
+      --bg-color: #f4f4f4;
+      --card-bg: #ffffff;
+      --border-color: #d1d1d1;
+      --text-main: #111111;
+      --text-muted: #666666;
+      --accent-dark: #000000;
+      --accent-light: #e0e0e0;
+    }
+
+    body { 
+      padding: 40px 20px; 
+      background-color: var(--bg-color); 
+      color: var(--text-main);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Typography */
+    h1 { 
+      color: var(--accent-dark); 
+      font-weight: 700; 
+      letter-spacing: -0.5px;
+      font-size: 1.75rem;
+      text-transform: uppercase;
+    }
+    h5, h6 {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.85rem;
+      color: var(--accent-dark);
+    }
+    .text-muted { color: var(--text-muted) !important; }
+    hr { border-color: var(--border-color); opacity: 1; margin: 1.5rem 0; }
+
+    /* Layout & Cards */
+    .card { 
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 4px; /* Sharper corners for a professional look */
+      box-shadow: none; 
+    }
+    .card-header {
+      background: transparent;
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.25rem;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+
+    /* Media Elements */
+    .media-container {
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: #f9f9f9;
+      padding: 0.5rem;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    video, img.media-preview { 
+      width: 100%; 
+      height: auto;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: 2px; 
+      display: block; 
+      border: 1px solid var(--border-color);
+      background-color: var(--accent-dark);
+    }
+    #webcamCanvas { display: none; }
+
+    /* Buttons (Monochrome) */
+    .btn { 
+      border-radius: 2px; 
+      font-weight: 500; 
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease; 
+    }
+    .btn-primary { 
+      background-color: var(--accent-dark); 
+      color: #fff; 
+      border: 1px solid var(--accent-dark);
+    }
+    .btn-primary:hover { 
+      background-color: #333; 
+      border-color: #333;
+    }
+    .btn-secondary { 
+      background-color: transparent; 
+      color: var(--accent-dark); 
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { 
+      background-color: var(--accent-light); 
+      color: var(--accent-dark);
+    }
+    .btn-success { 
+      background-color: #fff; 
+      color: var(--accent-dark); 
+      border: 1px solid var(--accent-dark);
+    }
+    .btn-success:hover { 
+      background-color: var(--accent-light); 
+      color: var(--accent-dark); 
+    }
+    .btn-outline-secondary { 
+      border: 1px solid var(--border-color); 
+      color: var(--text-muted); 
+    }
+    .btn-outline-secondary:hover { 
+      background: var(--accent-light); 
+      color: var(--accent-dark); 
+    }
+
+    /* Form Elements */
+    .form-control { 
+      border: 1px solid var(--border-color); 
+      border-radius: 2px; 
+      font-size: 0.85rem;
+    }
+    .form-control:focus { 
+      border-color: var(--accent-dark); 
+      box-shadow: 0 0 0 1px var(--accent-dark); 
+    }
+    .form-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+    input[type="range"] { 
+      accent-color: var(--accent-dark); 
+    }
+
+    /* Custom Alert Badge - Monochrome Pulsing */
+    .badge-alert {
+      background-color: var(--accent-dark);
+      color: white;
+      padding: 0.4em 0.8em;
+      border-radius: 2px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 0.75rem;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Custom Layout Adjustments */
+    .status-indicator {
+      font-family: monospace;
+      font-size: 0.8rem;
+      background: #eee;
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="d-flex justify-content-between align-items-end mb-4 border-bottom border-dark pb-3">
+    <div>
+      <h1 class="mb-1">Fire & Smoke Detection</h1>
+      <p class="text-muted mb-0 small">System Console // Model: E:\YOLOv8-Fire-and-Smoke-Detection-main\models\best.pt</p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-4 col-md-5">
+      
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">System Parameters</h5>
+        </div>
+        <div class="card-body">
+          <div id="statusBlock" class="status-indicator text-muted mb-4">Initializing connection...</div>
+          
+          <div class="d-flex justify-content-between">
+            <label class="form-label">Confidence Threshold</label>
+            <span id="confVal" class="fw-bold" style="font-size: 0.85rem;">0.25</span>
+          </div>
+          <input id="confInput" type="range" min="0.05" max="0.9" step="0.01" value="0.25" class="form-range mt-1">
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Batch Analysis</h5>
+        </div>
+        <div class="card-body">
+          
+          <h6 class="text-muted">Image Processing</h6>
+          <input id="imgFile" class="form-control mb-2" type="file" accept="image/*">
+          <button id="sendImage" class="btn btn-primary w-100 py-2">Run Image Analysis</button>
+          <div id="imgMsg" class="mt-2 small text-muted text-center" style="min-height: 20px;"></div>
+
+          <hr>
+          
+          <h6 class="text-muted">Video Processing</h6>
+          <input id="vidFile" class="form-control mb-2" type="file" accept="video/*">
+          <button id="sendVideo" class="btn btn-secondary w-100 py-2">Queue Video Analysis</button>
+          <div id="videoMsg" class="mt-2 small text-muted text-center" style="min-height: 20px;"></div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8 col-md-7">
+      <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Live Surveillance Feed</h5>
+          <div>
+            <button id="startCam" class="btn btn-success px-4 py-1">Initialize</button>
+            <button id="stopCam" class="btn btn-outline-secondary px-4 py-1 ms-1" disabled>Halt</button>
+            <span id="alertBadge" class="badge-alert ms-3" style="display:none">THREAT DETECTED</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-4 h-100">
+            <div class="col-md-6">
+              <div class="media-container">
+                <h6 class="text-center text-muted mb-2">Local Source</h6>
+                <video id="webcam" autoplay playsinline muted class="media-preview"></video>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="media-container">
+                <h6 class="text-center text-muted mb-2">Processed Output</h6>
+                <img id="webcamOut" alt="Awaiting stream..." class="media-preview bg-white">
+              </div>
+            </div>
+          </div>
+
+          <canvas id="webcamCanvas"></canvas>
+          <audio id="siren" preload="auto">
+            <source src="https://actions.google.com/sounds/v1/alarms/medium_bell_ring.ogg" type="audio/ogg">
+          </audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-5">
+    <h5 class="border-bottom border-dark pb-2 mb-4">Static Detection Output</h5>
+    <div id="resultArea" class="row g-3">
+      </div>
+  </div>
+</div>
+
+<script>
+// Logic remains unchanged to ensure backend compatibility
+const confInput = document.getElementById('confInput');
+const confVal = document.getElementById('confVal');
+confInput.addEventListener('input', ()=> confVal.textContent = confInput.value);
+
+const statusBlock = document.getElementById('statusBlock');
+async function fetchStatus(){
+  try {
+    const res = await fetch('/status');
+    const js = await res.json();
+    statusBlock.textContent = `LOADED: ${js.model_loaded} | CLASSES: ${Object.values(js.classes).join(', ')} | CUDA: ${js.cuda_available}`;
+  } catch(e){
+    statusBlock.textContent = 'STATUS: OFFLINE (Cannot reach backend)';
+  }
+}
+fetchStatus();
+
+/* Image detection */
+document.getElementById('sendImage').onclick = async () => {
+  const f = document.getElementById('imgFile').files[0];
+  if(!f){ alert('Please select an image file.'); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('conf', confInput.value);
+  document.getElementById('imgMsg').textContent = 'Processing...';
+  try {
+    const res = await fetch('/detect_image', { method:'POST', body: fd });
+    const js = await res.json();
+    if(js.success){
+      const img = document.createElement('img');
+      img.src = js.image;
+      img.className = 'img-fluid media-preview my-2 w-100';
+      
+      const meta = document.createElement('div');
+      meta.className = 'status-indicator mt-2 mb-4';
+      meta.textContent = js.detections.length ? `DETECTED: ${js.detections.map(d=>d.class+' ('+d.conf.toFixed(2)+')').join(', ')}` : 'NO TARGETS DETECTED';
+      
+      const col = document.createElement('div');
+      col.className = 'col-md-4';
+      col.appendChild(img);
+      col.appendChild(meta);
+
+      const area = document.getElementById('resultArea');
+      area.prepend(col);
+      document.getElementById('imgMsg').textContent = 'Analysis complete.';
+      if(js.alarm) playAlarm();
+    } else {
+      document.getElementById('imgMsg').textContent = 'Error: ' + (js.error || 'unknown');
+    }
+  } catch(e){
+    document.getElementById('imgMsg').textContent = 'Network request failed.';
+  }
+};
+
+/* Video processing */
+document.getElementById('sendVideo').onclick = async () => {
+  const f = document.getElementById('vidFile').files[0];
+  if(!f){ alert('Please select a video file.'); return; }
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('conf', confInput.value);
+  document.getElementById('videoMsg').textContent = 'Uploading and processing (this may take time)...';
+  try {
+    const res = await fetch('/detect_video', { method:'POST', body: fd });
+    const js = await res.json();
+    if(js.success){
+      const link = document.createElement('a');
+      link.href = js.url;
+      link.textContent = 'Download Output Video';
+      link.className = 'd-block text-decoration-underline text-dark fw-bold mt-1';
+      document.getElementById('videoMsg').textContent = 'Status: Complete. ';
+      document.getElementById('videoMsg').appendChild(link);
+    } else {
+      document.getElementById('videoMsg').textContent = 'Error: ' + (js.error || 'unknown');
+    }
+  } catch(e){
+    document.getElementById('videoMsg').textContent = 'Network request failed.';
+  }
+};
+
+/* Webcam loop */
+let stream = null, loopTimer = null;
+const videoEl = document.getElementById('webcam');
+const canvas = document.getElementById('webcamCanvas');
+const webcamOut = document.getElementById('webcamOut');
+const startBtn = document.getElementById('startCam');
+const stopBtn = document.getElementById('stopCam');
+const alertBadge = document.getElementById('alertBadge');
+const siren = document.getElementById('siren');
+
+startBtn.onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    videoEl.srcObject = stream;
+    startBtn.disabled = true; stopBtn.disabled = false;
+    loopTimer = setInterval(captureAndSend, 300); // every 300ms
+  } catch(e){
+    alert('Hardware access error: ' + e.message);
+  }
+};
+
+stopBtn.onclick = () => {
+  if(loopTimer){ clearInterval(loopTimer); loopTimer = null; }
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  videoEl.srcObject = null;
+  startBtn.disabled = false; stopBtn.disabled = true;
+  alertBadge.style.display = 'none';
+};
+
+async function captureAndSend(){
+  if(!stream) return;
+  const w = videoEl.videoWidth || 640;
+  const h = videoEl.videoHeight || 480;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0, w, h);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+  try {
+    const res = await fetch('/detect_frame', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ image: dataUrl, conf: confInput.value })
+    });
+    if(!res.ok) return;
+    const js = await res.json();
+    if(js.success){
+      webcamOut.src = js.image;
+      if(js.alarm){
+        alertBadge.style.display = 'inline-block';
+        playAlarm();
+      } else {
+        alertBadge.style.display = 'none';
+      }
+    }
+  } catch(e){
+    console.warn('Frame transmission failed', e);
+  }
+}
+
+function playAlarm(){
+  try {
+    siren.currentTime = 0;
+    siren.play().catch(()=>{/* autoplay may be blocked; user interaction needed */});
+  } catch(e){}
+}
+</script>
+</body>
+</html>
